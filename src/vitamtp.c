@@ -680,6 +680,71 @@ uint16_t VitaMTP_SendObjectMetadataItems(vita_device_t *device, uint32_t event_i
 }
 
 /**
+ * Gets the ohfi id of the object requested by the Vita
+ * to send metadata on, along with the ids of the metadata items
+ * it asked for. VitaMTP_SendObjectMetadata() should be
+ * called afterwards.
+ *
+ * @param device a pointer to the device.
+ * @param event_id the unique ID sent by the Vita with the event.
+ * @param ohfi a pointer to an integer that will be filled with the id.
+ * @param items a pointer that will be filled with a newly allocated
+ *  array of item ids, or NULL if there are none. Free it with free().
+ * @param num_items a pointer that will be filled with the number of item ids.
+ * @return the PTP result code that the Vita returns.
+ * @see VitaMTP_SendObjectMetadata()
+ */
+uint16_t VitaMTP_GetObjectMetadataItems(vita_device_t *device, uint32_t event_id, uint32_t *ohfi, uint32_t **items,
+                                        uint32_t *num_items)
+{
+    unsigned char *data = NULL;
+    unsigned int len = 0;
+    uint16_t ret = VitaMTP_GetData(device, event_id, PTP_OC_VITA_SendObjectMetadataItems, &data, &len);
+
+    *items = NULL;
+    *num_items = 0;
+
+    if (ret != PTP_RC_OK)
+    {
+        return ret;
+    }
+
+    if (len < 4)
+    {
+        free(data);
+        return PTP_RC_GeneralError;
+    }
+
+    // payload: ohfi, item count, item ids
+    *ohfi = le32atoh(data);
+
+    if (len >= 8)
+    {
+        uint32_t count = le32atoh(data + 4);
+        uint32_t available = (len - 8) / 4;
+
+        // the count comes from the device, never read past the received data
+        if (count > available)
+        {
+            count = available;
+        }
+
+        if (count > 0 && (*items = malloc(count * sizeof(uint32_t))) != NULL)
+        {
+            for (uint32_t i = 0; i < count; i++)
+            {
+                (*items)[i] = le32atoh(data + 8 + i * 4);
+            }
+
+            *num_items = count;
+        }
+    }
+
+    free(data);
+    return ret;
+}
+
+/**
  * Not currently implemented, in the future, should be able to
  * cancel the event specified.
  *

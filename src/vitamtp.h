@@ -804,6 +804,8 @@ uint16_t VitaMTP_SendCopyConfirmationInfoInit(vita_device_t *device, uint32_t ev
 uint16_t VitaMTP_SendCopyConfirmationInfo(vita_device_t *device, uint32_t event_id, copy_confirmation_info_t *info,
         uint64_t size);
 uint16_t VitaMTP_SendObjectMetadataItems(vita_device_t *device, uint32_t event_id, uint32_t *ohfi);
+uint16_t VitaMTP_GetObjectMetadataItems(vita_device_t *device, uint32_t event_id, uint32_t *ohfi, uint32_t **items,
+                                        uint32_t *num_items);
 uint16_t VitaMTP_CancelTask(vita_device_t *device, uint32_t cancel_event_id);
 uint16_t VitaMTP_KeepAlive(vita_device_t *device, uint32_t event_id);
 uint16_t VitaMTP_SendObject(vita_device_t *device, uint32_t *parenthandle, uint32_t *p_handle, metadata_t *p_meta,
